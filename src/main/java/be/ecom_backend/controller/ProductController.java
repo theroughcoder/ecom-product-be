@@ -20,9 +20,19 @@ public class ProductController {
         this.prod = prod;
     }
 
+    @GetMapping("/categories")
+    public List<String> getCategories() {
+        return prod.getCategories();
+    }
+
     @GetMapping
     public List<ProductResponse> getProducts() {
         return prod.getProductsList();
+    }
+
+    @GetMapping("{id}")
+    public ProductResponse getProduct(@PathVariable long id) {
+        return prod.getProductById(id);
     }
 
     @PostMapping

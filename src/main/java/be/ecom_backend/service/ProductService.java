@@ -25,6 +25,14 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
+    public List<String> getCategories() {
+        return productRepository.findDistinctCategories();
+    }
+    public ProductResponse getProductById(Long id){
+        return productRepository.findById(id).map(this::mapToProductResponse)
+        .orElseThrow(() -> new RuntimeException("Product not found with" + id + " id"));
+    }
+
     public void createProduct (ProductRequest productRequest) {
         Product product = new Product();
         updateToProductRequest(product, productRequest);
@@ -41,6 +49,8 @@ public class ProductService {
         response.setRating(product.getRating());
         response.setNumReviews(product.getNumReviews());
         response.setCountInStock(product.getCountInStock());
+        response.setCategory(product.getCategory());
+        response.setDescription(product.getDescription());
         return response;
     }
     private void updateToProductRequest(Product product, ProductRequest productRequest) {
@@ -51,6 +61,8 @@ public class ProductService {
         product.setRating(productRequest.getRating());
         product.setNumReviews(productRequest.getNumReviews());
         product.setCountInStock(productRequest.getCountInStock());
+        product.setCategory(productRequest.getCategory());
+        product.setDescription(productRequest.getDescription());
     }
 
 }

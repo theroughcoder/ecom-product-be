@@ -21,4 +21,6 @@ public class Product {
     private int numReviews;
     private double price;
     private int countInStock;
+    private String category;
+    private String description;
 }
