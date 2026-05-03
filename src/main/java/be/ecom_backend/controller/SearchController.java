@@ -9,13 +9,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/products")
+@RequestMapping("/api/search")
 @RequiredArgsConstructor
 public class SearchController {
 
     private final SearchService searchService;
 
-    @GetMapping("/search")
+    @GetMapping
     public ResponseEntity<SearchResponseDto<ProductResponse>> search(
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String category,
