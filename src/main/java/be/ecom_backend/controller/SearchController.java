@@ -23,7 +23,7 @@ public class SearchController {
             @RequestParam(required = false) String order,
             @RequestParam(required = false) String rating,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "10") int size) {
 
         SearchRequestDto request = new SearchRequestDto();
         request.setQuery(query);

@@ -8,10 +8,11 @@ import be.ecom_backend.model.Product;
 import be.ecom_backend.repository.ProductRepository;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,21 +27,22 @@ public class SearchService {
         double[] priceRange = parsePriceRange(searchProduct.getPrice());
         double minRating = parseMinRating(searchProduct.getRating());
         Sort sort = parseOrder(searchProduct.getOrder());
+        PageRequest pageable = PageRequest.of(searchProduct.getPage() - 1, searchProduct.getSize(), sort);
 
-        List<Product> productList = productRepository.searchByFilter(
+        Page<Product> productPage = productRepository.searchByFilter(
                 searchProduct.getQuery(),
                 searchProduct.getCategory(),
                 priceRange[0],
                 priceRange[1],
                 minRating,
-                sort
+                pageable
         );
 
         SearchResponseDto<ProductResponse> response = new SearchResponseDto<ProductResponse>();
-        response.setProducts(productList.stream().map(this::mapToProductResponse).collect(Collectors.toList()));
-        response.setPage(1);
-        response.setPages(10);
-        response.setCountProducts(11);
+        response.setProducts(productPage.getContent().stream().map(this::mapToProductResponse).collect(Collectors.toList()));
+        response.setPage(searchProduct.getPage());
+        response.setPages(productPage.getTotalPages());
+        response.setCountProducts((int) productPage.getTotalElements());
 
         return response;
     }
