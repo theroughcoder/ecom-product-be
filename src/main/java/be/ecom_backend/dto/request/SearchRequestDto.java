@@ -11,5 +11,5 @@ public class SearchRequestDto {
     private String order;
     private String rating;
     private int page = 1;
-    private int size = 20;
+    private int size = 10;
 }
