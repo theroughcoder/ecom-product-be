@@ -10,9 +10,14 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
+import java.util.List;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -37,8 +42,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(withDefaults())
                 .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll();
-                    auth.requestMatchers("/api/products", "/api/products/categories").permitAll();
+                    auth.requestMatchers(new AntPathRequestMatcher("/**", "OPTIONS")).permitAll();
+                    auth.requestMatchers(
+                        new AntPathRequestMatcher("/api/products/**"),
+                        new AntPathRequestMatcher("/api/search")
+                    ).permitAll();
                     auth.anyRequest().authenticated();
                 })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

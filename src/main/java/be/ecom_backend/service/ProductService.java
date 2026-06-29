@@ -1,12 +1,16 @@
 package be.ecom_backend.service;
 
 import be.ecom_backend.dto.request.ProductRequest;
+import be.ecom_backend.dto.request.ProductValidateStockRequest;
 import be.ecom_backend.dto.response.ProductResponse;
+import be.ecom_backend.model.OrderItem;
 import be.ecom_backend.model.Product;
 import be.ecom_backend.repository.ProductRepository;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collection;
 import java.util.List;
@@ -30,7 +34,25 @@ public class ProductService {
     }
     public ProductResponse getProductById(Long id){
         return productRepository.findById(id).map(this::mapToProductResponse)
-        .orElseThrow(() -> new RuntimeException("Product not found with" + id + " id"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found with id " + id));
+    }
+
+    public String validateProductsCount(ProductValidateStockRequest request) {
+
+        for (OrderItem item : request.getOrderItems()) {
+
+            Product product = productRepository.findById(item.getId())
+                    .orElseThrow(() ->
+                            new RuntimeException("Product not found: " + item.getId()));
+
+            if (product.getCountInStock() < item.getQuantity()) {
+                return "Insufficient stock for product : " + item.getName()
+                        + ". Available: " + product.getCountInStock()
+                        + ", Requested: " + item.getQuantity();
+            }
+        }
+
+        return "Stock validation successful";
     }
 
     public void createProduct (ProductRequest productRequest) {
