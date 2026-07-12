@@ -45,6 +45,7 @@ public class SecurityConfig {
                     auth.requestMatchers(new AntPathRequestMatcher("/**", "OPTIONS")).permitAll();
                     auth.requestMatchers(
                         new AntPathRequestMatcher("/api/products/**"),
+                        new AntPathRequestMatcher("/api/v1/s3/upload-image"),
                         new AntPathRequestMatcher("/api/search")
                     ).permitAll();
                     auth.anyRequest().authenticated();

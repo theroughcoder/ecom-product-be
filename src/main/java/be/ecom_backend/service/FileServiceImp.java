@@ -1,26 +1,25 @@
 package be.ecom_backend.service;
 
 import be.ecom_backend.dto.response.FileUploadResponse;
+import be.ecom_backend.exception.FileUploadException;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import io.jsonwebtoken.io.IOException;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.io.IOException;
+import java.time.LocalDateTime;
 
 @Service
 @Slf4j
-public abstract class FileService implements FileService {
+public class FileServiceImp implements FileService {
 
     @Value("${aws.s3.bucketName}")
     private String bucketName;
@@ -38,23 +37,23 @@ public abstract class FileService implements FileService {
         BasicAWSCredentials awsCredentials = new BasicAWSCredentials(accessKey, secretKey);
         s3Client = AmazonS3ClientBuilder.standard()
                 .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
-                .withRegion(Regions.AP_SOUTHEAST_1)
+                .withRegion(Regions.AP_SOUTH_1)
                 .build();
     }
 
     @Override
-    public FileUploadResponse uploadFile(MultipartFile multipartFile) {
+    public FileUploadResponse uploadFile(MultipartFile multipartFile, String category) {
         FileUploadResponse fileUploadResponse = new FileUploadResponse();
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        String todayDate = dateTimeFormatter.format(LocalDate.now());
+        String folder = (category == null || category.isBlank()) ? "uncategorized" : category.trim();
         String filePath = "";
         try {
             ObjectMetadata objectMetadata = new ObjectMetadata();
             objectMetadata.setContentType(multipartFile.getContentType());
             objectMetadata.setContentLength(multipartFile.getSize());
-            filePath = todayDate+"/"+multipartFile.getOriginalFilename();
+            filePath = folder+"/"+multipartFile.getOriginalFilename();
             s3Client.putObject(bucketName, filePath, multipartFile.getInputStream(), objectMetadata);
-            fileUploadResponse.setFilePath(filePath);
+            String publicUrl = "https://" + bucketName + ".s3." + Regions.AP_SOUTH_1.getName() + ".amazonaws.com/" + filePath;
+            fileUploadResponse.setFilePath(publicUrl);
             fileUploadResponse.setDateTime(LocalDateTime.now());
         } catch (IOException e) {
             log.error("Error occurred ==> {}", e.getMessage());
@@ -63,5 +62,4 @@ public abstract class FileService implements FileService {
         return fileUploadResponse;
     }
 
-    public abstract FileUploadResponse uploadFile(MultipartFile multipartFile);
 }

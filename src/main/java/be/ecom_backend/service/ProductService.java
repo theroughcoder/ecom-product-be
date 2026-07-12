@@ -3,11 +3,15 @@ package be.ecom_backend.service;
 import be.ecom_backend.dto.request.ProductRequest;
 import be.ecom_backend.dto.request.ProductValidateStockRequest;
 import be.ecom_backend.dto.response.ProductResponse;
+import be.ecom_backend.dto.response.SearchResponseDto;
 import be.ecom_backend.model.OrderItem;
 import be.ecom_backend.model.Product;
 import be.ecom_backend.repository.ProductRepository;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,6 +25,8 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class ProductService {
 
+    private static final int ADMIN_PAGE_SIZE = 10;
+
     public ProductRepository productRepository;
 
     public List<ProductResponse> getProductsList() {
@@ -31,6 +37,18 @@ public class ProductService {
 
     public List<String> getCategories() {
         return productRepository.findDistinctCategories();
+    }
+
+    public SearchResponseDto<ProductResponse> getAdminProducts(int page) {
+        PageRequest pageable = PageRequest.of(page - 1, ADMIN_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "id"));
+        Page<Product> productPage = productRepository.findAll(pageable);
+
+        SearchResponseDto<ProductResponse> response = new SearchResponseDto<>();
+        response.setProducts(productPage.getContent().stream().map(this::mapToProductResponse).collect(Collectors.toList()));
+        response.setPage(page);
+        response.setPages(productPage.getTotalPages());
+        response.setCountProducts((int) productPage.getTotalElements());
+        return response;
     }
     public ProductResponse getProductById(Long id){
         return productRepository.findById(id).map(this::mapToProductResponse)
@@ -59,6 +77,20 @@ public class ProductService {
         Product product = new Product();
         updateToProductRequest(product, productRequest);
         productRepository.save(product);
+    }
+
+    public void updateProduct(Long id, ProductRequest productRequest) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found with id " + id));
+        updateToProductRequest(product, productRequest);
+        productRepository.save(product);
+    }
+
+    public void deleteProduct(Long id) {
+        if (!productRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found with id " + id);
+        }
+        productRepository.deleteById(id);
     }
 
     public ProductResponse mapToProductResponse (Product product) {
