@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -43,11 +44,15 @@ public class SecurityConfig {
                 .cors(withDefaults())
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(new AntPathRequestMatcher("/**", "OPTIONS")).permitAll();
+                    // Public storefront reads: browse, view a product, list categories.
                     auth.requestMatchers(
-                        new AntPathRequestMatcher("/api/products/**"),
-                        new AntPathRequestMatcher("/api/v1/s3/upload-image"),
+                        new AntPathRequestMatcher("/api/products", "GET"),
+                        new AntPathRequestMatcher("/api/products/categories", "GET"),
+                        new RegexRequestMatcher("/api/products/\\d+", "GET"),
+                        new AntPathRequestMatcher("/api/products/check-products-quantity", "POST"),
                         new AntPathRequestMatcher("/api/search")
                     ).permitAll();
+                    // Admin operations (list, create, update, delete, image upload) require a valid JWT.
                     auth.anyRequest().authenticated();
                 })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
